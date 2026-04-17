@@ -1,0 +1,113 @@
+import {
+  getAiWebhookPath,
+  REASONING_FIRST_SYSTEM_PROMPT,
+  resolveReasoningProvider,
+  type QexurEnvironment,
+} from "@/lib/config/ai-config";
+import type { JobEnvelope } from "@/types/qexur";
+
+type N8nWorkflow =
+  | "auditor/scan"
+  | "wp-auditor/swap"
+  | "destroyer/verify-dns"
+  | "destroyer/execute";
+
+type SendToN8nOptions = {
+  workflow: N8nWorkflow;
+  payload: Record<string, unknown>;
+  environment?: QexurEnvironment;
+};
+
+type ReasoningPolicy = {
+  mode: "reasoning-first";
+  transport: "custom-http-request";
+  chainOfThoughtDirective: string;
+  selfCorrectionEnabled: boolean;
+  selfCorrectionPasses: number;
+  systemPrompt: string;
+  finalOutputDirective: string;
+};
+
+const DEFAULT_REASONING_POLICY: ReasoningPolicy = {
+  mode: "reasoning-first",
+  transport: "custom-http-request",
+  chainOfThoughtDirective:
+    "Use Chain-of-Thought reasoning internally before producing the final report output.",
+  selfCorrectionEnabled: true,
+  selfCorrectionPasses: 2,
+  systemPrompt: REASONING_FIRST_SYSTEM_PROMPT,
+  finalOutputDirective: "Return only the final validated report without internal scratchpad content.",
+};
+
+const N8N_WORKFLOW_PATHS: Record<N8nWorkflow, string> = {
+  "auditor/scan": process.env.N8N_WEBHOOK_AUDITOR_SCAN ?? "/webhook/qexur/auditor/scan",
+  "wp-auditor/swap": process.env.N8N_WEBHOOK_WP_AUDITOR_SWAP ?? "/webhook/qexur/wp-auditor/swap",
+  "destroyer/verify-dns":
+    process.env.N8N_WEBHOOK_DESTROYER_VERIFY_DNS ?? "/webhook/qexur/destroyer/verify-dns",
+  "destroyer/execute": process.env.N8N_WEBHOOK_DESTROYER_EXECUTE ?? "/webhook/qexur/destroyer/execute",
+};
+
+function normalizeBaseUrl(url: string): string {
+  return url.endsWith("/") ? url.slice(0, -1) : url;
+}
+
+export async function sendToN8n(options: SendToN8nOptions): Promise<JobEnvelope> {
+  const baseUrl = process.env.N8N_BASE_URL;
+  const apiKey = process.env.N8N_API_KEY;
+  const environment = options.environment ?? "internal";
+
+  const aiProvider = resolveReasoningProvider(environment);
+  const n8nRoute = N8N_WORKFLOW_PATHS[options.workflow];
+  const aiRoute = getAiWebhookPath(environment);
+  const reasoningPolicy = options.payload.reasoningPolicy ?? DEFAULT_REASONING_POLICY;
+
+  const routeIsAbsolute = /^https?:\/\//i.test(n8nRoute);
+
+  if (!routeIsAbsolute && !baseUrl) {
+    return {
+      jobId: crypto.randomUUID(),
+      status: "queued",
+      nextStep: "Configure N8N_BASE_URL to activate webhook forwarding.",
+      n8nRoute,
+      details: `Dry-run payload accepted. Planned AI route: ${aiRoute} (${aiProvider})`,
+    };
+  }
+
+  const url = routeIsAbsolute ? n8nRoute : `${normalizeBaseUrl(baseUrl as string)}${n8nRoute}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiKey ? { "x-qexur-n8n-key": apiKey } : {}),
+    },
+    body: JSON.stringify({
+      ...options.payload,
+      aiRoute,
+      aiProvider,
+      reasoningPolicy,
+      environment,
+      sentAt: new Date().toISOString(),
+    }),
+  });
+
+  if (!response.ok) {
+    return {
+      jobId: crypto.randomUUID(),
+      status: "failed",
+      nextStep: "Inspect n8n workflow health and webhook auth settings.",
+      n8nRoute,
+      details: `n8n returned ${response.status} ${response.statusText}`,
+    };
+  }
+
+  const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+
+  return {
+    jobId: String(data.jobId ?? crypto.randomUUID()),
+    status: (data.status as JobEnvelope["status"]) ?? "queued",
+    nextStep: String(data.nextStep ?? "Monitor workflow in n8n execution history."),
+    n8nRoute,
+    details: String(data.details ?? "Webhook accepted by n8n."),
+  };
+}
