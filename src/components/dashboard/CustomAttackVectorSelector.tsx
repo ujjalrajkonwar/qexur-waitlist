@@ -14,6 +14,7 @@ type CustomAttackVectorSelectorProps = {
   disabled: boolean;
   pending?: boolean;
   canInitiate: boolean;
+  showInitiateButton?: boolean;
 };
 
 export function CustomAttackVectorSelector({
@@ -23,6 +24,7 @@ export function CustomAttackVectorSelector({
   disabled,
   pending = false,
   canInitiate,
+  showInitiateButton = true,
 }: CustomAttackVectorSelectorProps) {
   const [query, setQuery] = useState("");
 
@@ -49,7 +51,7 @@ export function CustomAttackVectorSelector({
   return (
     <section className="space-y-4 rounded-xl border border-[var(--qx-border)] bg-black/30 p-5">
       <header className="space-y-2">
-        <h3 className="text-xs uppercase tracking-[0.2em] text-[var(--qx-muted)]">4. Custom Attack Vector Selector</h3>
+        <h3 className="text-xs uppercase tracking-[0.2em] text-[var(--qx-muted)]">Custom Attack Vector Selector</h3>
         <p className="text-xs text-[var(--qx-muted)]">
           Select specific entry points for a refined attack run. Vector selection is locked until DNS verification is complete.
         </p>
@@ -143,19 +145,21 @@ export function CustomAttackVectorSelector({
         </div>
       )}
 
-      <button
-        type="button"
-        disabled={!canInitiate || disabled || pending}
-        onClick={onInitiateAttack}
-        className={[
-          "rounded-xl border-2 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition",
-          !canInitiate || disabled || pending
-            ? "cursor-not-allowed border-zinc-700 bg-zinc-800 text-zinc-400"
-            : "border-cyan-400 bg-cyan-500 text-black shadow-[0_0_22px_rgba(6,182,212,0.25)] hover:bg-cyan-400",
-        ].join(" ")}
-      >
-        {pending ? "Dispatching..." : "Initiate Refined Attack"}
-      </button>
+      {showInitiateButton && (
+        <button
+          type="button"
+          disabled={!canInitiate || disabled || pending}
+          onClick={onInitiateAttack}
+          className={[
+            "rounded-xl border-2 px-6 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition",
+            !canInitiate || disabled || pending
+              ? "cursor-not-allowed border-zinc-700 bg-zinc-800 text-zinc-400"
+              : "border-cyan-400 bg-cyan-500 text-black shadow-[0_0_22px_rgba(6,182,212,0.25)] hover:bg-cyan-400",
+          ].join(" ")}
+        >
+          {pending ? "Dispatching..." : "Initiate Refined Attack"}
+        </button>
+      )}
     </section>
   );
 }

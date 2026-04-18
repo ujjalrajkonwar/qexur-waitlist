@@ -76,7 +76,31 @@ export const destroyerExecuteSchema = z.object({
   entryPointIds: z.array(z.string().min(1)).max(64).optional(),
 });
 
+const destroyerProgressStatusSchema = z.enum(["queued", "running", "completed", "failed"]);
+
+export const destroyerProgressWebhookSchema = z
+  .object({
+    jobId: z.string().min(1).max(200),
+    status: destroyerProgressStatusSchema,
+    executedAttacks: z.coerce.number().int().nonnegative(),
+    totalAttacks: z.coerce.number().int().nonnegative(),
+    nextStep: z.string().min(1).max(500).optional(),
+    details: z.string().min(1).max(3000).optional(),
+    userId: z.string().min(1).max(200).optional(),
+    sentAt: z.string().datetime().optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.totalAttacks > 0 && value.executedAttacks > value.totalAttacks) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["executedAttacks"],
+        message: "executedAttacks cannot be greater than totalAttacks.",
+      });
+    }
+  });
+
 export type AuditorRequest = z.infer<typeof auditorRequestSchema>;
 export type WpAuditorRequest = z.infer<typeof wpAuditorRequestSchema>;
 export type DestroyerDnsVerifyRequest = z.infer<typeof destroyerDnsVerifySchema>;
 export type DestroyerExecuteRequest = z.infer<typeof destroyerExecuteSchema>;
+export type DestroyerProgressWebhookPayload = z.infer<typeof destroyerProgressWebhookSchema>;

@@ -2,10 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ConsoleShell } from "@/components/dashboard/ConsoleShell";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Qexur | Settings",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildSeoMetadata({
+    title: "Qexur Settings | Security Workspace Controls",
+    description:
+      "Authenticated account and workspace settings for Qexur AI security operations.",
+    path: "/settings",
+    index: false,
+  });
+}
 
 export default function SettingsPage() {
   return (

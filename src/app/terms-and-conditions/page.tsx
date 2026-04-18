@@ -1,6 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { TERMS_SECTIONS } from "@/content/terms";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildSeoMetadata({
+    title: "Qexur Terms and Conditions | Security Usage Policy",
+    description:
+      "Terms and conditions for using Qexur autonomous AI security audits and live attack simulations.",
+    path: "/terms-and-conditions",
+    index: true,
+  });
+}
 
 export default function TermsAndConditionsPage() {
   return (

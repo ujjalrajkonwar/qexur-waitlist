@@ -2,10 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ConsoleShell } from "@/components/dashboard/ConsoleShell";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Qexur | Billing",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildSeoMetadata({
+    title: "Qexur Billing | Security Platform Usage",
+    description:
+      "Authenticated billing and usage controls for the Qexur autonomous AI security platform.",
+    path: "/billing",
+    index: false,
+  });
+}
 
 export default function BillingPage() {
   return (

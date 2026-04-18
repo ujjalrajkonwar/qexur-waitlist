@@ -1,4 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+import { buildSeoMetadata } from "@/lib/seo/metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildSeoMetadata({
+    title: "Qexur Privacy Policy | AI Security Data Practices",
+    description:
+      "Privacy policy covering data handling and retention practices for Qexur AI security workflows.",
+    path: "/privacy-policy",
+    index: true,
+  });
+}
 
 export default function PrivacyPolicyPage() {
   return (

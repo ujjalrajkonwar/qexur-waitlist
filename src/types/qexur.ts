@@ -66,4 +66,6 @@ export type JobEnvelope = {
   nextStep: string;
   n8nRoute: string;
   details: string;
+  executedAttacks?: number;
+  totalAttacks?: number;
 };

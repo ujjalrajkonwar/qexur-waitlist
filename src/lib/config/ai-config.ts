@@ -1,11 +1,19 @@
 export const USE_MINIMAX_M2_7 = true;
-export const USE_GROQ = true;
 export const USE_GEMMA_4 = false;
 // Deprecated provider route retained for emergency rollback only.
 export const USE_CLAUDE_SONNET_4_6 = false;
 
+export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+export const OPENROUTER_DEFAULT_TITLE = "Qexur AI";
+
 export type QexurEnvironment = "internal" | "beta" | "enterprise";
-export type AiProviderId = "minimax-m2-7" | "groq" | "gemma-4" | "claude-sonnet-4-6";
+export type AiProviderId = "minimax-m2-7" | "gemma-4" | "claude-sonnet-4-6";
+export type OpenRouterTransportConfig = {
+  provider: AiProviderId;
+  baseUrl: string;
+  model: string;
+  headers: Record<string, string>;
+};
 
 export const REASONING_FIRST_SYSTEM_PROMPT = [
   "You are Qexur Web Auditor running in reasoning-first mode.",
@@ -103,13 +111,7 @@ export const AI_PROVIDER_BRIDGE: Record<AiProviderId, ProviderBridge> = {
     id: "minimax-m2-7",
     enabled: USE_MINIMAX_M2_7,
     webhookPath: process.env.N8N_WEBHOOK_AI_MINIMAX_M2_7 ?? "/webhook/qexur/ai/minimax-m2-7/reason",
-    purpose: "Primary next-gen reasoning profile with self-correction.",
-  },
-  "groq": {
-    id: "groq",
-    enabled: USE_GROQ,
-    webhookPath: process.env.N8N_WEBHOOK_AI_GROQ ?? "/webhook/qexur/ai/groq/reason",
-    purpose: "Fallback reasoning profile for resiliency.",
+    purpose: "Primary OpenRouter MiniMax m2.7 reasoning profile with self-correction.",
   },
   "gemma-4": {
     id: "gemma-4",
@@ -139,10 +141,6 @@ export function resolveReasoningProvider(environment: QexurEnvironment): AiProvi
     return "minimax-m2-7";
   }
 
-  if (environment === "internal" && USE_GROQ) {
-    return "groq";
-  }
-
   if (environment === "beta" && USE_GEMMA_4) {
     return "gemma-4";
   }
@@ -153,10 +151,6 @@ export function resolveReasoningProvider(environment: QexurEnvironment): AiProvi
 
   if (USE_MINIMAX_M2_7) {
     return "minimax-m2-7";
-  }
-
-  if (USE_GROQ) {
-    return "groq";
   }
 
   if (USE_GEMMA_4) {
@@ -173,4 +167,29 @@ export function resolveReasoningProvider(environment: QexurEnvironment): AiProvi
 export function getAiWebhookPath(environment: QexurEnvironment): string {
   const provider = resolveReasoningProvider(environment);
   return AI_PROVIDER_BRIDGE[provider].webhookPath;
+}
+
+function resolveOpenRouterModel(provider: AiProviderId): string {
+  if (provider === "minimax-m2-7") {
+    return process.env.OPENROUTER_MODEL_MINIMAX_M2_7 ?? "minimax/minimax-m2.7-chat";
+  }
+
+  if (provider === "gemma-4") {
+    return process.env.OPENROUTER_MODEL_GEMMA_4 ?? "google/gemma-3-27b-it";
+  }
+
+  return process.env.OPENROUTER_MODEL_CLAUDE_SONNET_4_6 ?? "anthropic/claude-sonnet-4.5";
+}
+
+export function getOpenRouterTransportConfig(environment: QexurEnvironment): OpenRouterTransportConfig {
+  const provider = resolveReasoningProvider(environment);
+
+  return {
+    provider,
+    baseUrl: process.env.OPENROUTER_BASE_URL ?? OPENROUTER_BASE_URL,
+    model: resolveOpenRouterModel(provider),
+    headers: {
+      "X-Title": OPENROUTER_DEFAULT_TITLE,
+    },
+  };
 }
