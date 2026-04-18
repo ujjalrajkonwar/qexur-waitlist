@@ -74,14 +74,16 @@ body {
   animation: qx-modal-wolf 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.seo-semantic-layer {
+.visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
-  clip-path: inset(50%);
   white-space: nowrap;
+  border-width: 0;
 }
 
 @keyframes qx-grid-pulse {
