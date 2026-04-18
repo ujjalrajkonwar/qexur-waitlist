@@ -74,6 +74,16 @@ body {
   animation: qx-modal-wolf 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.seo-semantic-layer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @keyframes qx-grid-pulse {
   0% {
     opacity: 0.2;

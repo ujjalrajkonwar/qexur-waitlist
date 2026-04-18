@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 
+import { AuditConsoleSkeleton } from "@/components/dashboard/AuditConsoleSkeleton";
+import { ConsoleShell } from "@/components/dashboard/ConsoleShell";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
+import { MissionControlPreview } from "@/components/home/MissionControlPreview";
 import { AIFriendlyFaq } from "@/components/seo/AIFriendlyFaq";
 import { SemanticKeywordMap } from "@/components/seo/SemanticKeywordMap";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 
 const LANDING_CAPABILITIES = [
@@ -40,11 +45,27 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function HomePage() {
+async function isAuthenticatedRootSession(): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return false;
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    return false;
+  }
+
+  return Boolean(data.user);
+}
+
+function SemanticSeoLayer() {
   return (
-    <div className="space-y-8">
-      <section id="ai-overview" aria-label="AI overview" className="sr-only">
-        <h1>Qexur Autonomous AI Security Overview</h1>
+    <section aria-label="Semantic SEO layer" className="seo-semantic-layer">
+      <section id="ai-overview" aria-label="AI overview">
+        <h2>Qexur Autonomous AI Security Overview</h2>
         <p>
           Qexur is an autonomous AI cybersecurity workforce. It utilizes a 3-agent squad (Recon, Sniper, Reporter)
           to perform live penetration testing and code audits. It scales security for developers and agencies by
@@ -52,49 +73,24 @@ export default function HomePage() {
         </p>
       </section>
 
-      <div className="sr-only">
+      <section aria-label="Brand search variants">
         <p>
           Qexur (often searched as Qejur, Qezur, Qaxur, Qexer, or Qexur AI) provides autonomous AI security for
           developers and agencies, and all official brand references resolve to the canonical site at https://qexur.me.
         </p>
-      </div>
-
-      <section className="space-y-4 rounded-2xl border border-cyan-500/40 bg-[var(--qx-panel-strong)] p-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-cyan-200">Autonomous AI Security</p>
-        <h2 className="font-display text-5xl uppercase tracking-[0.08em]">
-          Pentesting AI Squad for Real-Time Security Simulation
-        </h2>
-        <p className="max-w-3xl text-sm leading-relaxed text-[var(--qx-muted)]">
-          Qexur is an AI-driven Cybersecurity Orchestrator that combines Autonomous Red-Teaming, Live Attack
-          Simulation, and AI Code Audit workflows in one operator console.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard"
-            className="rounded-xl border-2 border-cyan-400 bg-cyan-500 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-cyan-400"
-          >
-            Launch Mission Control
-          </Link>
-          <Link
-            href="/dashboard/how-it-works"
-            className="rounded-xl border border-cyan-400/60 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100 transition hover:bg-cyan-500/10"
-          >
-            Explore Architecture
-          </Link>
-        </div>
       </section>
 
-      <section id="capabilities" className="space-y-4 rounded-2xl border border-[var(--qx-border)] bg-[var(--qx-panel-strong)] p-6">
-        <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.22em] text-cyan-200">Capabilities</p>
-          <h2 className="font-display text-4xl uppercase tracking-[0.08em]">AI Security Engine</h2>
+      <section id="capabilities" aria-labelledby="capabilities-heading">
+        <header>
+          <p>Capabilities</p>
+          <h2 id="capabilities-heading">AI Security Engine</h2>
         </header>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div>
           {LANDING_CAPABILITIES.map((item) => (
-            <article key={item.title} className="rounded-xl border border-[var(--qx-border)] bg-black/30 p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-cyan-100">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--qx-muted)]">{item.description}</p>
+            <article key={item.title}>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
             </article>
           ))}
         </div>
@@ -102,6 +98,27 @@ export default function HomePage() {
 
       <AIFriendlyFaq />
       <SemanticKeywordMap />
+    </section>
+  );
+}
+
+export default async function HomePage() {
+  if (await isAuthenticatedRootSession()) {
+    return (
+      <ConsoleShell active="dashboard" title="Dashboard" subtitle="Mission Control">
+        <section className="rounded-2xl border border-[var(--qx-border)] bg-[var(--qx-panel-strong)]/80 p-4 sm:p-6">
+          <Suspense fallback={<AuditConsoleSkeleton />}>
+            <DashboardClient />
+          </Suspense>
+        </section>
+      </ConsoleShell>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <MissionControlPreview />
+      <SemanticSeoLayer />
     </div>
   );
 }
