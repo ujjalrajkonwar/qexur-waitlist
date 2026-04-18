@@ -5,8 +5,8 @@ import { AppFooter } from "@/components/layout/AppFooter";
 import { AI_FRIENDLY_FAQ } from "@/lib/seo/faq";
 import {
   BRAND_ALTERNATE_NAMES,
+  BRAND_SAME_AS_LINKS,
   CORE_METADATA_KEYWORDS,
-  OFFICIAL_BRAND_DESCRIPTION,
   PRIMARY_SEO_PHRASES,
   SITE_URL,
 } from "@/lib/seo/constants";
@@ -24,20 +24,26 @@ const sans = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const GLOBAL_TITLE = "Qexur | Autonomous AI Security Orchestrator";
+const GLOBAL_DESCRIPTION =
+  "Qexur is an autonomous AI cybersecurity engine. It deploys a 3-agent squad (Recon, Sniper, Reporter) for real-time penetration testing, code audits, and stress simulations.";
+
 const organizationJsonLd = {
   "@type": "Organization",
   "@id": `${SITE_URL}/#organization`,
   name: "Qexur",
   alternateName: BRAND_ALTERNATE_NAMES,
+  sameAs: BRAND_SAME_AS_LINKS,
   url: SITE_URL,
-  description:
-    "Qexur is an AI-driven Cybersecurity Orchestrator focused on autonomous red-teaming, live attack simulation, and AI code audit workflows.",
+  description: GLOBAL_DESCRIPTION,
   knowsAbout: [
-    "Autonomous Red-Teaming",
-    "Live Attack Simulation",
+    "AI Cybersecurity",
+    "Autonomous Pentesting",
+    "Red-Teaming AI",
+    "Real-time Security Simulation",
+    "Autonomous Vulnerability Discovery",
+    "Automated Exploit Generation",
     "AI Code Audit",
-    "Real-time Web Attack Simulation",
-    "Pentesting AI Squad",
   ],
 };
 
@@ -46,17 +52,19 @@ const softwareApplicationJsonLd = {
   "@id": `${SITE_URL}/#software`,
   name: "Qexur",
   alternateName: BRAND_ALTERNATE_NAMES,
-  description:
-    "Qexur is an AI-driven Cybersecurity Orchestrator that runs Autonomous Red-Teaming and Live Attack Simulation for developers and agencies.",
+  description: GLOBAL_DESCRIPTION,
   applicationCategory: "SecurityApplication",
   operatingSystem: "Web",
   url: SITE_URL,
   featureList: [
-    "Autonomous Red-Teaming",
-    "Live Attack Simulation",
-    "Real-time Web Attack Simulation",
+    "AI Cybersecurity",
+    "Autonomous Pentesting",
+    "Red-Teaming AI",
+    "Real-time Security Simulation",
+    "Autonomous Vulnerability Discovery",
+    "Automated Exploit Generation",
+    "3-agent squad (Recon, Sniper, Reporter)",
     "AI Code Audit",
-    "Pentesting AI Squad",
   ],
   provider: {
     "@id": `${SITE_URL}/#organization`,
@@ -84,11 +92,10 @@ const aiSeoGraphJsonLd = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Qexur | Autonomous AI Security",
+    default: GLOBAL_TITLE,
     template: "%s",
   },
-  description:
-    `Autonomous AI Security with a Pentesting AI Squad, real-time web attack simulation, and AI code audit. ${OFFICIAL_BRAND_DESCRIPTION}`,
+  description: GLOBAL_DESCRIPTION,
   keywords: Array.from(new Set([...CORE_METADATA_KEYWORDS, ...PRIMARY_SEO_PHRASES])),
   alternates: {
     canonical: SITE_URL,
@@ -96,24 +103,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: SITE_URL,
-    title: "Qexur | Autonomous AI Security",
-    description:
-      `Autonomous AI Security with a Pentesting AI Squad, real-time web attack simulation, and AI code audit. ${OFFICIAL_BRAND_DESCRIPTION}`,
+    title: GLOBAL_TITLE,
+    description: GLOBAL_DESCRIPTION,
     siteName: "Qexur",
     images: [
       {
         url: `${SITE_URL}/opengraph-image`,
         width: 1200,
         height: 630,
-        alt: "Qexur Autonomous AI Security Preview",
+        alt: "Qexur Autonomous AI Security Orchestrator Preview",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Qexur | Autonomous AI Security",
-    description:
-      `Autonomous AI Security with a Pentesting AI Squad, real-time web attack simulation, and AI code audit. ${OFFICIAL_BRAND_DESCRIPTION}`,
+    title: GLOBAL_TITLE,
+    description: GLOBAL_DESCRIPTION,
     images: [`${SITE_URL}/twitter-image`],
   },
   robots: {
